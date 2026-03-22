@@ -8,9 +8,6 @@ use App\Models\Product;
 
 class ProductController extends Controller
 {
-    /**
-     * Menampilkan daftar produk dengan filter dan paginasi.
-     */
     public function index(Request $request)
     {
         $query = Product::with(['category', 'seller']);
@@ -69,12 +66,8 @@ class ProductController extends Controller
         ]);
     }
 
-    /**
-     * Menyimpan data produk baru ke database.
-     */
     public function store(Request $request)
     {
-        // 1. Validasi Input (Layer Keamanan Pertama)
         $validatedData = $request->validate([
             'category_id' => 'required|exists:product_categories,id',
             'title'       => 'required|string|max:255',
@@ -84,10 +77,8 @@ class ProductController extends Controller
             'file_path'   => 'nullable|string',
         ]);
 
-        // 2. Eksekusi Penyimpanan Aman (Mencegah Mass Assignment & IDOR)
         $product = $request->user()->products()->create($validatedData);
 
-        // 3. Kembalikan Response Sukses
         return response()->json([
             'success' => true,
             'message' => 'Produk berhasil ditambahkan',
@@ -95,12 +86,8 @@ class ProductController extends Controller
         ], 201);
     }
 
-    /**
-     * Memperbarui data produk spesifik.
-     */
     public function update(Request $request, Product $product)
     {
-        // 1. Lapisan Otorisasi (Mutlak: Mencegah IDOR)
         if ($request->user()->id !== $product->seller_id) {
             return response()->json([
                 'success' => false,
@@ -108,8 +95,6 @@ class ProductController extends Controller
             ], 403);
         }
 
-        // 2. Validasi Input
-        // Menggunakan 'sometimes' agar client tidak wajib mengirim seluruh field jika hanya ingin mengubah satu data (misal: harga saja).
         $validatedData = $request->validate([
             'category_id' => 'sometimes|required|exists:product_categories,id',
             'title'       => 'sometimes|required|string|max:255',
@@ -119,7 +104,6 @@ class ProductController extends Controller
             'file_path'   => 'nullable|string',
         ]);
 
-        // 3. Eksekusi Pembaruan Data
         $product->update($validatedData);
 
         return response()->json([
@@ -129,12 +113,8 @@ class ProductController extends Controller
         ]);
     }
 
-    /**
-     * Menghapus data produk spesifik.
-     */
     public function destroy(Request $request, Product $product)
     {
-        // 1. Lapisan Otorisasi (Mutlak: Mencegah IDOR)
         if ($request->user()->id !== $product->seller_id) {
             return response()->json([
                 'success' => false,
@@ -142,7 +122,6 @@ class ProductController extends Controller
             ], 403);
         }
 
-        // 2. Eksekusi Penghapusan
         $product->delete();
 
         return response()->json([
@@ -150,4 +129,4 @@ class ProductController extends Controller
             'message' => 'Produk berhasil dihapus'
         ]);
     }
-} // <--- PENUTUP KELAS BERADA DI SINI, PALING BAWAH
+}

@@ -11,21 +11,18 @@ class AuthController extends Controller
 {
     public function register(Request $request)
     {
-        // 1. Validasi Input Ekstra Ketat
         $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:users',
             'password' => 'required|string|min:6',
         ]);
 
-        // 2. Pembuatan User Baru
         $user = User::create([
             'name' => $request->name,
             'email' => $request->email,
-            'password' => Hash::make($request->password), // Password WAJIB di-hash
+            'password' => Hash::make($request->password),
         ]);
 
-        // 3. Penerbitan Token Sanctum
         $token = $user->createToken('auth_token')->plainTextToken;
 
         return response()->json([
@@ -44,10 +41,8 @@ class AuthController extends Controller
             'password' => 'required|string',
         ]);
 
-        // Cek keberadaan user berdasarkan email
         $user = User::where('email', $request->email)->first();
 
-        // Validasi kecocokan password
         if (!$user || !Hash::check($request->password, $user->password)) {
             return response()->json([
                 'success' => false,
@@ -55,10 +50,8 @@ class AuthController extends Controller
             ], 401);
         }
 
-        // Hapus token lama jika ada (opsional: untuk mencegah penumpukan token di DB)
         $user->tokens()->delete();
 
-        // Terbitkan token baru
         $token = $user->createToken('auth_token')->plainTextToken;
 
         return response()->json([
